@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网站更新提示插件</title>
+    <style>
+        .update-alert {
+            position: fixed;
+            top: -100px;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            background: #2c3e50;
+            color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .update-alert.show {
+            top: 0;
+        }
+
+        .alert-content {
+            flex: 1;
+            margin-right: 20px;
+            font-size: 16px;
+        }
+
+        .close-alert {
+            background: none;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 0 10px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .close-alert:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- 这里放置你的网站内容 -->
+    <div id="app">这是网站主内容区域</div>
+
+    <!-- 更新提示插件 -->
+    <div class="update-alert" id="updateAlert">
+        <div class="alert-content" id="alertContent"></div>
+        <button class="close-alert" id="closeAlert">&times;</button>
+    </div>
+
+    <script>
+        class WebsiteUpdateAlert {
+            constructor(config = {}) {
+                this.defaultConfig = {
+                    message: '网站已更新，点击查看最新内容 →',
+                    bgColor: '#2c3e50',
+                    textColor: '#ffffff',
+                    closeText: '×',
+                    showAgainAfter: 7, // 关闭后N天后重新显示（0表示永久关闭）
+                    storageKey: 'websiteUpdateAlertClosed'
+                };
+                this.config = { ...this.defaultConfig, ...config };
+                this.alertElement = document.getElementById('updateAlert');
+                this.contentElement = document.getElementById('alertContent');
+                this.closeButton = document.getElementById('closeAlert');
+                
+                this.init();
+            }
+
+            init() {
+                // 应用自定义样式
+                this.alertElement.style.background = this.config.bgColor;
+                this.alertElement.style.color = this.config.textColor;
+                this.contentElement.textContent = this.config.message;
+                this.closeButton.textContent = this.config.closeText;
+
+                // 检查是否需要显示
+                if (!this.checkClosedStatus()) {
+                    this.showAlert();
+                }
+
+                // 绑定关闭事件
+                this.closeButton.addEventListener('click', () => this.closeAlert());
+            }
+
+            checkClosedStatus() {
+                const stored = localStorage.getItem(this.config.storageKey);
+                if (!stored) return false;
+
+                const { closedTime, showAgainAfter } = JSON.parse(stored);
+                const currentTime = new Date().getTime();
+                const daysPassed = (currentTime - closedTime) / (1000 * 3600 * 24);
+
+                return daysPassed < this.config.showAgainAfter;
+            }
+
+            showAlert() {
+                setTimeout(() => {
+                    this.alertElement.classList.add('show');
+                }, 500);
+            }
+
+            closeAlert() {
+                this.alertElement.classList.remove('show');
+                if (this.config.showAgainAfter > 0) {
+                    localStorage.setItem(this.config.storageKey, JSON.stringify({
+                        closedTime: new Date().getTime(),
+                        showAgainAfter: this.config.showAgainAfter
+                    }));
+                }
+            }
+        }
+
+        // 使用示例：初始化插件（可根据需要修改配置）
+        new WebsiteUpdateAlert({
+            message: '重要更新：新增会员中心功能，立即体验 →',
+            bgColor: '#e74c3c', // 红色背景
+            showAgainAfter: 3 // 关闭后3天重新显示
+        });
+    </script>
+</body>
+</html>
+    
